@@ -1,0 +1,31 @@
+{
+	"name": "browser-fs-42",
+	"version": "1.0.0",
+	"description": "A file system project for my OS lesson assignment and learning WebAssembly",
+	"main": "index.js",
+	"directories": {
+		"doc": "docs"
+	},
+	"dependencies": {
+		"node-sass": "^4.9.0",
+		"normalize.css": "^8.0.0",
+		"xterm": "^3.3.0"
+	},
+	"devDependencies": {},
+	"scripts": {
+		"start": "parcel web-shell/index.html",
+		"dev": "parcel web-shell/index.html",
+		"build": "parcel build web-shell/index.html",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/hangxingliu/browser-fs-42.git"
+	},
+	"author": "Liu Yue",
+	"license": "GPL-3.0",
+	"bugs": {
+		"url": "https://github.com/hangxingliu/browser-fs-42/issues"
+	},
+	"homepage": "https://github.com/hangxingliu/browser-fs-42#readme"
+}
