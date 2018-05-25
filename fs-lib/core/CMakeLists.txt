@@ -8,9 +8,9 @@ set(CMAKE_CXX_STANDARD 11)
 file(GLOB_RECURSE SOURCE_FILES .
 	tests/*.cc
 	tests/*.h
-	StorageDevices/DeviceInterface.cc
-	StorageDevices/DeviceInterface.h
-	StorageDevices/InMemory128MBDevice.cc
-	StorageDevices/InMemory128MBDevice.h
+	StorageDevices/*.cc
+	StorageDevices/*.h
+	FS*.cc
+	FS*.h
 	)
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
