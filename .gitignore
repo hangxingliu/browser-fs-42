@@ -1,3 +1,14 @@
+references
+
+# auto-save files
+*.autosave
+
+# cpp output binary files
+*.out
+
+# build directories
+build-*
+
 # ================================================================
 #   _   _           _         _
 #  | \ | | ___   __| | ___   (_)___
@@ -173,3 +184,73 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# ================================================================
+#    ____ __  __       _
+#   / ___|  \/  | __ _| | _____
+#  | |   | |\/| |/ _` | |/ / _ \
+#  | |___| |  | | (_| |   <  __/
+#   \____|_|  |_|\__,_|_|\_\___|
+
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+
+
+
+# ================================================================
+#    ___  _
+#   / _ \| |_
+#  | | | | __|
+#  | |_| | |_
+#   \__\_\\__|
+
+# C++ objects and libs
+*.slo
+*.lo
+*.o
+*.a
+*.la
+*.lai
+*.so
+*.dll
+*.dylib
+
+# Qt-es
+object_script.*.Release
+object_script.*.Debug
+*_plugin_import.cpp
+/.qmake.cache
+/.qmake.stash
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.moc
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.qmlc
+*.jsc
+Makefile*
+*build-*
+
+# Qt unit tests
+target_wrapper.*
+
+# QtCreator
+*.autosave
+
+# QtCreator Qml
+*.qmlproject.user
+*.qmlproject.user.*
+
+# QtCreator CMake
+CMakeLists.txt.user*
