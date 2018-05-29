@@ -1,5 +1,6 @@
 #include "memory"
 #include "cstring"
+#include "../Base/Types.h"
 #include "InMemory128MBDevice.h"
 
 using namespace std;

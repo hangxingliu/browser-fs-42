@@ -3,11 +3,11 @@
 #ifndef CORE_FS_INODE_H
 #define CORE_FS_INODE_H
 
-#include <sys/types.h>
 #include <list>
 #include <memory>
 #include <vector>
 #include <string>
+#include "Base/Types.h"
 #include "FSDataBlock.h"
 
 

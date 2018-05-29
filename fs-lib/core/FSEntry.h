@@ -6,7 +6,7 @@
 #include <list>
 #include <memory>
 #include <string>
-#include <sys/types.h>
+#include "Base/Types.h"
 #include "FSDataBlock.h"
 #include "FSInode.h"
 
