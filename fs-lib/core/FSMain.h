@@ -8,6 +8,8 @@
 #include <map>
 #include <string>
 #include <vector>
+
+#include "StorageDevices/DeviceInterface.h"
 #include "FSDataBlock.h"
 #include "FSInode.h"
 #include "FSEntry.h"
@@ -32,11 +34,12 @@ class FSMain {
 		std::shared_ptr<FSEntry> final_node;
 	};
 
-	const std::string filename;
-	std::fstream disk_file;
-	const uint block_size;
-	const uint direct_blocks;
-	const uint num_blocks;
+	DeviceInterface* storageDevice = nullptr;
+
+	// std::fstream disk_file;
+	uint block_size;
+	uint direct_blocks;
+	uint num_blocks = 0;
 
 	// FSEntry root;
 	std::list<FSDataBlock>free_list;
@@ -45,7 +48,7 @@ class FSMain {
 	std::map<uint, Descriptor> open_files;
 	uint next_descriptor = 0;
 
-	void init_disk(const std::string& filename);
+	void init_disk();
 	std::unique_ptr<PathRet> parse_path(std::string path_str) const;
 	bool basic_open(Descriptor *d, std::vector <std::string> args);
 	std::unique_ptr<std::string> basic_read(Descriptor &desc, const uint size);
@@ -53,8 +56,7 @@ class FSMain {
 	bool basic_close(uint fd);
 
 public:
-	FSMain(const std::string& filename,
-		const uint fs_size,
+	FSMain(DeviceInterface* storageDevice,
 		const uint block_size,
 		const uint direct_blocks);
 	~FSMain();

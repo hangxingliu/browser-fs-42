@@ -30,41 +30,37 @@ using namespace std;
 	ops_at_least(x);                            \
 	ops_less_than(x);
 
-FSMain::FSMain(const string& filename,
-		const uint fs_size,
+FSMain::FSMain(DeviceInterface* storageDevice,
 		const uint block_size,
 		const uint direct_blocks) :
-	filename(filename),
+	storageDevice(storageDevice),
 	block_size(block_size),
-	direct_blocks(direct_blocks),
-	num_blocks(ceil(static_cast<double>(fs_size) / block_size)) {
+	direct_blocks(direct_blocks) {
+
+	this->num_blocks = storageDevice->getDeviceCapacity() / block_size;
 
 	FSInode::block_size = block_size;
 	FSInode::free_list = &free_list;
 	root_dir = FSEntry::make_de_dir("root", nullptr);
+
 	// start at root dir;
 	pwd = root_dir;
-	init_disk(filename);
+
+	init_disk();
 	free_list.emplace_back(num_blocks, 0);
 }
 
 FSMain::~FSMain() {
-	disk_file.close();
-	remove(filename.c_str());
+//	disk_file.close();
+//	remove(filename.c_str());
 }
 
-void FSMain::init_disk(const string& filename) {
-	const vector<char>zeroes(num_blocks, 0);
+void FSMain::init_disk() {
+	const vector<char> zeroes(block_size, 0);
+	auto data = zeroes.data();
 
-	disk_file.open(filename,
-		fstream::in |
-		fstream::out |
-		fstream::binary |
-		fstream::trunc);
-
-	for (uint i = 0; i < num_blocks; ++i) {
-		disk_file.write(zeroes.data(), block_size);
-	}
+	for (uint i = 0; i < num_blocks; ++i)
+		storageDevice->write(block_size * i,  data, block_size);
 }
 
 unique_ptr<FSMain::PathRet> FSMain::parse_path(string path_str) const {
@@ -207,8 +203,7 @@ unique_ptr<string> FSMain::basic_read(Descriptor &desc, const uint size) {
 			uint j = (pos - dbytes) / block_size % direct_blocks;
 			read_src = inode->i_blocks->at(i)[j] + pos % block_size;
 		}
-		disk_file.seekp(read_src);
-		disk_file.read(data_p, read_size);
+		storageDevice->read(read_src, read_size, data_p);
 		pos += read_size;
 		data_p += read_size;
 		bytes_to_read -= read_size;
@@ -240,20 +235,20 @@ void FSMain::write(vector<string> args) {
 uint FSMain::basic_write(Descriptor &desc, const string data) {
 	const char *bytes = data.c_str();
 	uint &pos = desc.byte_pos;
-	uint bytes_to_write = data.size();
+	uint bytes_to_write = (uint) data.size();
 	uint bytes_written = 0;
 	auto inode = desc.inode.lock();
 	uint &file_size = inode->size;
 	uint &file_blocks_used = inode->blocks_used;
 	uint new_size = max(file_size, pos + bytes_to_write);
-	uint new_blocks_used = ceil(static_cast<double>(new_size)/block_size);
+	uint new_blocks_used = (uint) ceil(static_cast<double>(new_size)/block_size);
 	uint blocks_needed = new_blocks_used - file_blocks_used;
 	uint dbytes = direct_blocks * block_size;
 
 	// expand the inode to indirect blocks if needed
 	if (blocks_needed && blocks_needed + file_blocks_used > 2) {
-		uint ivec_used = (ceil(min(file_blocks_used - 2, 0U) / static_cast<float>(direct_blocks)));
-		uint ivec_new = (ceil((new_blocks_used - 2) / static_cast<float>(direct_blocks)));
+		uint ivec_used = (uint) (ceil(min(file_blocks_used - 2, 0U) / static_cast<float>(direct_blocks)));
+		uint ivec_new = (uint) (ceil((new_blocks_used - 2) / static_cast<float>(direct_blocks)));
 		while (ivec_used < ivec_new) {
 			inode->i_blocks->push_back(vector<uint>());
 			ivec_used++;
@@ -308,14 +303,13 @@ uint FSMain::basic_write(Descriptor &desc, const string data) {
 			uint j = (pos - dbytes) / block_size % direct_blocks;
 			write_dest = inode->i_blocks->at(i)[j] + pos % block_size;
 		}
-		disk_file.seekp(write_dest);
-		disk_file.write(bytes + bytes_written, write_size);
+		storageDevice->write(write_dest, bytes + bytes_written, write_size);
 		bytes_written += write_size;
 		bytes_to_write -= write_size;
 		pos += write_size;
 	}
 
-	disk_file.flush();
+	// disk_file.flush();
 	file_size = new_size;
 	return bytes_written;
 }
@@ -616,15 +610,15 @@ void FSMain::FS_export(vector<string> args) {
 	ops_exactly(2);
 
 	Descriptor desc;
-	ofstream out(args[2], ofstream::binary);
-	if (!out.is_open()) {
+	ofstream export_stream(args[2], ofstream::binary);
+	if (!export_stream.is_open()) {
 		cerr << args[0] << ": error: Unable to open " << args[2] << endl;
 		return;
 	}
 
 	if (basic_open(&desc, vector<string>{args[0], args[1], "r"})) {
 		unique_ptr<string> data = basic_read(desc, desc.inode.lock()->size);
-		out << *data;
+		export_stream << *data;
 		basic_close(desc.fd);
 	}
 }
