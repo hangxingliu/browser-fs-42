@@ -7,9 +7,10 @@
 		"doc": "docs"
 	},
 	"dependencies": {
+		"jquery.terminal": "^1.15.0",
+		"lodash": "^4.17.10",
 		"node-sass": "^4.9.0",
-		"normalize.css": "^8.0.0",
-		"xterm": "^3.3.0"
+		"normalize.css": "^8.0.0"
 	},
 	"devDependencies": {},
 	"scripts": {

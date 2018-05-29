@@ -17,6 +17,8 @@ public: //interfaces
 	unsigned int getDeviceCurrentSize() { return capacity; }
 	unsigned int read(unsigned int offset, unsigned int size, char *data);
 	unsigned int write(unsigned int offset, const char *data, unsigned int size);
+
+	char* lowLevelAsscess() { return data; }
 };
 
 #endif

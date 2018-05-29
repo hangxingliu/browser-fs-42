@@ -3,7 +3,6 @@
 #ifndef CORE_FS_MAIN_H
 #define CORE_FS_MAIN_H
 
-#include <fstream>
 #include <list>
 #include <map>
 #include <string>
@@ -75,9 +74,11 @@ public:
 	void cat(std::vector<std::string> args);
 	void cp(std::vector<std::string> args);
 	void tree(std::vector<std::string> args);
-	void import(std::vector<std::string> args);
+	// void import(std::vector<std::string> args);
 	void printwd(std::vector<std::string> args);
-	void FS_export(std::vector<std::string> args);
+	// void FS_export(std::vector<std::string> args);
+
+	std::string getPwd();
 };
 
 #endif

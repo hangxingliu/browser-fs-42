@@ -1,51 +1,52 @@
 //@ts-check
-import { Terminal } from "xterm";
-import { fit } from 'xterm/lib/addons/fit/fit'
-import { winptyCompatInit } from 'xterm/lib/addons/winptyCompat/winptyCompat';
+/// <reference path="./types.d.ts" />
 
-setupTerminal();
-function setupTerminal() {
-	const conatiner = document.getElementById('container');
-	conatiner.innerHTML = '';
+import _ from 'lodash';
+import $ from "jquery";
+import initJQueryTerminal from "jquery.terminal";
+initJQueryTerminal($);
 
-	const terminal = new Terminal({
-		fontFamily: 'monospace',
-		lineHeight: 1.4,
-		cursorBlink: true,
-		scrollback: 1000,
-		tabStopWidth: 4,
-	});
+const RETURN_CALLBACK = p => p;
 
-	let resizedFinished = null;
-	window.addEventListener('resize', () => {
-		clearTimeout(resizedFinished)
-		resizedFinished = setTimeout(() => {
-			fit(terminal);
-		}, 250)
-	})
+document.addEventListener('DOMContentLoaded', main);
 
-	terminal.open(conatiner);
-	winptyCompatInit(terminal);
-	fit(terminal);
-	showPrompt();
+function main() {
+	const onWindowResize = _.debounce(_onWindowResize, 200);
+	const terminalOptions = {
+		greetings: 'Browser FileSystem 42',
+		prompt: getPrompt
+	};
+	const terminal = $('#container').terminal(command => {
+		Module.fs_repl(command);
+	}, terminalOptions);
 
-	terminal.on('key', (key, ev) => {
-		//@ts-ignore
-		const isPrintable = (!ev.altKey && !ev.altGraphKey && !ev.ctrlKey && !ev.metaKey);
+	onWindowResize();
+	window.addEventListener('resize', onWindowResize);
 
-		if (ev.keyCode == 13) {
-			showPrompt();
-		} else if (ev.keyCode == 8) {
-			// Do not delete the prompt
-			// if (terminal.x > 2) {
-			terminal.write('\b \b');
-			// }
-		} else if (isPrintable) {
-			terminal.write(key);
-		}
-	});
+	const webAssmeblyScript = document.createElement('script');
+	window['Module'] = {};
+	Module.print = content => terminal.echo(getEchoString(content));
+	Module.printErr = content => terminal.echo(`[[;red;]${getEchoString(content)}]`);
+	Module.onRuntimeInitialized = () => {
+		console.log('WebAssmebly module be loaded!');
+		Module.fs_init(16 * 1024); // 16KB
+		terminal.set_prompt(getPrompt);
+	}
+	webAssmeblyScript.src = 'browser-fs-42-wasm.js';
+	document.head.appendChild(webAssmeblyScript);
 
-	function showPrompt() {
-		terminal.write('\r\n$ ');
+
+	function getPrompt(callback = RETURN_CALLBACK) {
+		const getPwd = _.get(window, 'Module.fs_pwd')
+		if (!getPwd) return callback('$ ');
+		return callback(`[[b;green;]${getEchoString(getPwd())}] $ `);
+	}
+	/** @param {string} str */
+	function getEchoString(str) { return str.replace(/\]/g, '&#93'); }
+	function _onWindowResize() {
+		terminal.resize(window.innerWidth - 20, window.innerHeight - 20);
 	}
 }
+
+
+

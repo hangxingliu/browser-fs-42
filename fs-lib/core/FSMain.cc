@@ -413,13 +413,9 @@ void FSMain::rmdir(vector<string> args) {
 	}
 }
 
-void FSMain::printwd(vector<string> args) {
-	ops_exactly(0);
-
-	if (pwd == root_dir) {
-		cout << "/" << endl;
-		return;
-	}
+string FSMain::getPwd() {
+	if (pwd == root_dir)
+		return "/";
 
 	auto wd = pwd;
 	deque<string> plist;
@@ -428,10 +424,14 @@ void FSMain::printwd(vector<string> args) {
 		wd = wd->parent.lock();
 	}
 
-	for (auto dirname : plist) {
-		cout << "/" << dirname;
-	}
-	cout << endl;
+	string result = "";
+	for (auto dirname : plist)
+		result += "/" + dirname;
+	return result;
+}
+void FSMain::printwd(vector<string> args) {
+	ops_exactly(0);
+	cout << getPwd() << endl;
 }
 
 void FSMain::cd(vector<string> args) {
@@ -587,6 +587,7 @@ void FSMain::tree(vector<string> args) {
 	tree_helper(pwd, "");
 }
 
+/*
 void FSMain::import(vector<string> args) {
 	ops_exactly(2);
 
@@ -622,3 +623,4 @@ void FSMain::FS_export(vector<string> args) {
 		basic_close(desc.fd);
 	}
 }
+*/
