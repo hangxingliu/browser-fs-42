@@ -1,0 +1,2 @@
+build.emscripten/*.wasm
+build.emscripten/*.js

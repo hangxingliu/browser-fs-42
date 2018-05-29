@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<meta name="renderer" content="webkit" />
+		<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0" />
+		<title>Emscripten with CMake</title>
+	</head>
+	<style>
+		button { font-size: 1.5em; padding: .5em; margin: .5em; }
+	</style>
+	<body>
+		<button id="btnPut">Append Number Into WebAssembly</button>
+		<div id="output" style="font-family: monospace"></div>
+
+		<script src="test.js"></script>
+		<script>
+			window.addEventListener('load', () => {
+				let out = document.getElementById('output');
+				let index = 0;
+				document.getElementById('btnPut').addEventListener('click', () => {
+					/** @type {Uint8Array} */
+					let buffer = Module.getBufferArea();
+					buffer[index] = parseInt(Math.random() * 100000) % 256;
+					index++;
+
+					out.innerText = buffer.join(' ');
+				});
+				Module.onRuntimeInitialized = () => {
+				}
+			});
+		</script>
+	</body>
+</html>
