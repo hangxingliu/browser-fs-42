@@ -1,14 +1,18 @@
 // This code is modified from https://github.com/capdevc/toyfs (Original repository is licensed under MIT license)
 
-#include "FSInode.h"
+#include <iostream>
 #include <algorithm>
 #include <list>
 #include <vector>
+
+#include "FSInode.h"
 
 using std::list;
 using std::shared_ptr;
 using std::sort;
 using std::vector;
+using std::cout;
+using std::endl;
 
 uint FSInode::block_size = 0;
 list<FSDataBlock> * FSInode::free_list = nullptr;
@@ -20,7 +24,8 @@ FSInode::~FSInode() {
 	if (blocks_used == 0) {
 		return;
 	} else if (blocks_used == 1) {
-		free_list->emplace_front(block_size, d_blocks[0]);
+		free_list->emplace_front(1, d_blocks[0]);
+		return;
 	}
 
 	vector<uint> blocks;
@@ -35,6 +40,9 @@ FSInode::~FSInode() {
 	}
 
 	sort(begin(blocks), end(blocks));
+	cout << "DEBUG: ~FSInode blocks: " << blocks.size() << endl;
+	for(auto& b: blocks)
+		cout << "DEBUG:   offset:" << b << endl;
 
 	uint start = blocks.front();
 	uint last = start;
@@ -42,7 +50,7 @@ FSInode::~FSInode() {
 	blocks.erase(begin(blocks));
 	for (uint block : blocks) {
 		if (block - last != block_size) {
-			free_list->emplace_back(size, start);
+			free_list->emplace_back(size / block_size, start);
 			last = start = block;
 			size = 0;
 		} else {
@@ -51,6 +59,6 @@ FSInode::~FSInode() {
 		}
 	}
 
-	free_list->emplace_front(size, start);
+	free_list->emplace_front(size / block_size, start);
 }
 

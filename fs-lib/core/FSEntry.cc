@@ -18,7 +18,7 @@ FSEntry::FSEntry() {
   is_locked = false;
 }
 
-shared_ptr<FSEntry> FSEntry::make_de_dir(const string name, const shared_ptr<FSEntry> parent) {
+shared_ptr<FSEntry> FSEntry::createDirectory(const string name, const shared_ptr<FSEntry> parent) {
 	auto sp = make_shared<FSEntry>(FSEntry());
 	if (parent == nullptr) {
 		sp->parent = sp;
@@ -32,7 +32,7 @@ shared_ptr<FSEntry> FSEntry::make_de_dir(const string name, const shared_ptr<FSE
 	return sp;
 }
 
-shared_ptr<FSEntry> FSEntry::make_de_file(
+shared_ptr<FSEntry> FSEntry::createFile(
 	const string name,
 	const shared_ptr<FSEntry> parent,
 	const shared_ptr<FSInode> &inode) {
@@ -69,13 +69,13 @@ shared_ptr<FSEntry> FSEntry::make_de_file(
 }
 
 shared_ptr<FSEntry> FSEntry::add_dir(const string name) {
-	auto new_dir = make_de_dir(name, self.lock());
+	auto new_dir = createDirectory(name, self.lock());
 	contents.push_back(new_dir);
 	return new_dir;
 }
 
 shared_ptr<FSEntry> FSEntry::add_file(const string name) {
-	auto new_file = make_de_file(name, self.lock(), make_shared<FSInode>());
+	auto new_file = createFile(name, self.lock(), make_shared<FSInode>());
 	contents.push_back(new_file);
 	return new_file;
 }

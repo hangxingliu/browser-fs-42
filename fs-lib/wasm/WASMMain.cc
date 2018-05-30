@@ -19,7 +19,7 @@ static InMemory128MBDevice* device = nullptr;
 const std::string REPL_PROMPT = "sh> ";
 const uint BLOCK_SIZE = 1024;
 const uint DIRECT_BLOCKS = 100;
-uint LAST_CAPACITY = 0;
+static uint LAST_CAPACITY = 0;
 
 int init(int capacity) {
 	LAST_CAPACITY = (uint) capacity;
@@ -67,6 +67,24 @@ int repl(std::string commands) {
 		if(!fsMain)
 			break;
 
+		if (name == "df") {
+			printf("Capacity of storage device: %d\n", device->getDeviceCapacity());
+			fsMain->dumpFreeDataBlocks(args);
+			break;
+		}
+
+		if(name == "debug") {
+			if(args.size() < 2) {
+				printf("Current debug log status: %s\n", (FSMain::debugLog ? "on" : "off") );
+			} else if(args[1] == "on" || args[1] == "off") {
+				FSMain::debugLog = args[1] == "on";
+				printf("Switch debug log status to %s\n", (FSMain::debugLog ? "on" : "off") );
+			} else {
+				fprintf(stderr, "Usage: %s on|off \n", name.c_str());
+			}
+			break;
+		}
+
 		if (name == "mkfs" || name == "format") {
 			if (args.size() != 1) {
 				fprintf(stderr, "%s: too many operands\n", name.c_str());
@@ -106,15 +124,20 @@ int repl(std::string commands) {
 		if (args[0] == "mkdir") { fsMain->mkdir(args); break; }
 		if (args[0] == "rmdir") { fsMain->rmdir(args); break; }
 
+		if (args[0] == "rm") { fsMain->unlink(args); break; }
+		if (args[0] == "unlink") { fsMain->unlink(args); break; }
+
 		if (args[0] == "cp") { fsMain->cp(args); break; }
 		if (args[0] == "link") { fsMain->link(args); break; }
-		if (args[0] == "unlink") { fsMain->unlink(args); break; }
 
 		if (args[0] == "ls") { fsMain->ls(args); break; }
 		if (args[0] == "stat") { fsMain->stat(args); break; }
 		if (args[0] == "tree") { fsMain->tree(args); break; }
 
 		if (args[0] == "cat") { fsMain->cat(args); break; }
+		if (args[0] == "touch") { fsMain->touch(args); break; }
+		if (args[0] == "a") { fsMain->fillA(args); break; }
+		if (args[0] == "txt") { fsMain->createText(args); break; }
 
 		if (args[0] == "cd") { fsMain->cd(args); break; }
 		if (args[0] == "pwd") { fsMain->printwd(args); break; }

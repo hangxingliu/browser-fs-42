@@ -22,4 +22,4 @@ file(GLOB SOURCE_FILES .
 
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
 set_target_properties(${TARGET_NAME} PROPERTIES LINK_FLAGS
-	"-s DEMANGLE_SUPPORT=1 --bind -s WASM=1")
+	"-s DEMANGLE_SUPPORT=1 --bind -s WASM=1 -s ALLOW_MEMORY_GROWTH=1")

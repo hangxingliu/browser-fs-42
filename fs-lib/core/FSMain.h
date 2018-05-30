@@ -59,26 +59,38 @@ public:
 		const uint block_size,
 		const uint direct_blocks);
 	~FSMain();
+
+	static bool debugLog;
+
 	void open(std::vector<std::string> args);
 	void read(std::vector<std::string> args);
 	void write(std::vector<std::string> args);
 	void seek(std::vector<std::string> args);
 	void close(std::vector<std::string> args);
+
 	void mkdir(std::vector<std::string> args);
 	void rmdir(std::vector<std::string> args);
+
 	void cd(std::vector<std::string> args);
+	void printwd(std::vector<std::string> args);
+
 	void link(std::vector<std::string> args);
 	void unlink(std::vector<std::string> args);
+
 	void stat(std::vector<std::string> args);
 	void ls(std::vector<std::string> args);
-	void cat(std::vector<std::string> args);
-	void cp(std::vector<std::string> args);
 	void tree(std::vector<std::string> args);
-	// void import(std::vector<std::string> args);
-	void printwd(std::vector<std::string> args);
-	// void FS_export(std::vector<std::string> args);
+
+	void touch(std::vector<std::string> args);
+	void createText(std::vector<std::string> args);
+	void fillA(std::vector<std::string> args);
+	void cat(std::vector<std::string> args);
+
+	void cp(std::vector<std::string> args);
 
 	std::string getPwd();
+
+	void dumpFreeDataBlocks(std::vector<std::string> args);
 };
 
 #endif

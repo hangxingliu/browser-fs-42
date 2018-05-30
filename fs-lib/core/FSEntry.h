@@ -3,6 +3,7 @@
 #ifndef CORE_FS_ENTRY_H
 #define CORE_FS_ENTRY_H
 
+#include <iostream>
 #include <list>
 #include <memory>
 #include <string>
@@ -15,13 +16,15 @@ enum FSEntryType { file, dir };
 class FSEntry: public std::enable_shared_from_this<FSEntry> {
 	FSEntry();
 public:
-	static std::shared_ptr<FSEntry> make_de_dir(
+	static std::shared_ptr<FSEntry> createDirectory(
 		const std::string name,
 		const std::shared_ptr<FSEntry> parent);
-	static std::shared_ptr<FSEntry> make_de_file(
+	static std::shared_ptr<FSEntry> createFile(
 		const std::string name,
 		const std::shared_ptr<FSEntry> parent,
 		const std::shared_ptr<FSInode> &inode=nullptr);
+
+//	~FSEntry() { std::cout << "DEBUG: ~FSEntry \"" << name << "\"" << std::endl; }
 
 	uint block_size;
 	FSEntryType type;

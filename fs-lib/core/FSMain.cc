@@ -30,6 +30,8 @@ using namespace std;
 	ops_at_least(x);                            \
 	ops_less_than(x);
 
+bool FSMain::debugLog = true;
+
 FSMain::FSMain(DeviceInterface* storageDevice,
 		const uint block_size,
 		const uint direct_blocks) :
@@ -41,7 +43,7 @@ FSMain::FSMain(DeviceInterface* storageDevice,
 
 	FSInode::block_size = block_size;
 	FSInode::free_list = &free_list;
-	root_dir = FSEntry::make_de_dir("root", nullptr);
+	root_dir = FSEntry::createDirectory("root", nullptr);
 
 	// start at root dir;
 	pwd = root_dir;
@@ -255,6 +257,10 @@ uint FSMain::basic_write(Descriptor &desc, const string data) {
 		}
 	}
 
+	if(debugLog) {
+		cout << "DEBUG: basic_write  blocks_needed: " << blocks_needed << endl;
+	}
+
 	// find space
 	vector<pair<uint, uint>> free_chunks;
 	auto fl_it = begin(free_list);
@@ -278,16 +284,23 @@ uint FSMain::basic_write(Descriptor &desc, const string data) {
 		free_list.erase(used_entry);
 	}
 
+	if(debugLog) {
+		cout << "DEBUG: found free_chunks:" << endl;
+		for(auto& chunk: free_chunks)
+			cout << "DEBUG:   offset: " << chunk.first
+				 << " blocks;  size: " << chunk.second << " blocks;" << endl;
+	}
+
 	// allocate our blocks
 	for (auto fc_it : free_chunks) {
 		uint block_pos = fc_it.first;
 		uint num_blocks = fc_it.second;
 		for (uint k = 0; k < num_blocks; ++k, ++file_blocks_used, block_pos += block_size) {
 			if (file_blocks_used < direct_blocks) {
-			inode->d_blocks.push_back(block_pos);
+				inode->d_blocks.push_back(block_pos);
 			} else {
-			uint i = ((file_blocks_used - direct_blocks) / direct_blocks);
-			inode->i_blocks->at(i).push_back(block_pos);
+				uint i = ((file_blocks_used - direct_blocks) / direct_blocks);
+				inode->i_blocks->at(i).push_back(block_pos);
 			}
 		}
 	}
@@ -469,7 +482,7 @@ void FSMain::link(vector<string> args) {
 	} else if (src_parent == dest_parent) {
 		cerr << "link: error: src and dest must be in different directories." << endl;
 	} else {
-		auto new_file = FSEntry::make_de_file(dest_name, dest_parent, src->inode);
+		auto new_file = FSEntry::createFile(dest_name, dest_parent, src->inode);
 		dest_parent->contents.push_back(new_file);
 	}
 }
@@ -509,6 +522,13 @@ void FSMain::stat(vector<string> args) {
 			cout << " Links: " << node->inode.use_count() << endl;
 			cout << "  Size: " << node->inode->size << endl;
 			cout << "Blocks: " << node->inode->blocks_used << endl;
+			if(debugLog) {
+				cout << "Direct Blocks: ";
+				for(auto& b: node->inode->d_blocks)
+					cout << b << " ";
+				cout << endl;
+			}
+
 			} else if(node->type == dir) {
 				cout << "  Type: directory" << endl;
 			}
@@ -583,44 +603,78 @@ void tree_helper(shared_ptr<FSEntry> directory, string indent) {
 
 void FSMain::tree(vector<string> args) {
 	ops_exactly(0);
-
 	tree_helper(pwd, "");
 }
 
-/*
-void FSMain::import(vector<string> args) {
-	ops_exactly(2);
-
+void FSMain::touch(std::vector<string> args) {
+	ops_exactly(1);
 	Descriptor desc;
-	fstream in(args[1]);
-	if(!in.is_open()) {
-		cerr << args[0] << ": error: Unable to open " << args[1] << endl;
+
+	auto path = parse_path(args[1]);
+	auto node = path->final_node;
+	if(node != nullptr) {
+		cerr << "Error: " << args[1] << " is existed!" << endl;
+	} else if (!basic_open(&desc, {"open", args[1], "w"})) {
+		cerr << "Error: could not open " << args[1] << " for write" << endl;
+	} else if (!basic_close(desc.fd)) {
+		cerr << "Error: could not close " << args[1] << endl;
+	}
+}
+
+void FSMain::createText(std::vector<string> args) {
+	ops_exactly(2);
+	Descriptor desc;
+
+	auto path = parse_path(args[1]);
+	auto node = path->final_node;
+	if(node != nullptr) {
+		cerr << "Error: " << args[1] << " is existed!" << endl;
+	} else if (!basic_open(&desc, {"open", args[1], "w"})) {
+		cerr << "Error: could not open " << args[1] << " for write" << endl;
+	} else if (!basic_write(desc, args[2])) {
+		cerr << "Error: write text to file " << args[1] << " failed!" << endl;
+	} else if (!basic_close(desc.fd)) {
+		cerr << "Error: could not close " << args[1] << endl;
+	}
+}
+
+void FSMain::fillA(std::vector<string> args) {
+	ops_exactly(2);
+	Descriptor desc;
+
+	auto path = parse_path(args[1]);
+	if (!basic_open(&desc, {"open", args[1], "w"})) {
+		cerr << "Error: could not open " << args[1] << " for write" << endl;
 		return;
 	}
-	if (basic_open(&desc, vector<string>{args[0], args[2], "w"})) {
-		string data((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
-		if (!basic_write(desc, data)) {
-			cerr << args[0] << ": error: out of free space or file too large"
-				<< endl;
+	int count = atoi(args[2].c_str());
+	if(count <= 0) {
+		cerr << "Error: \"" << args[2] << " is invalid count of 0!" << endl;
+		return;
+	}
+	const int bufSize = 1024;
+	char buf[bufSize];
+	for(uint i = 0 ; i < bufSize ; i ++ ) buf[i] = 'A';
+	buf[bufSize - 1] = 0;
+
+	while(count > 0) {
+		if(count < bufSize) buf[count] = 0;
+		count -= bufSize - 1;
+		if (!basic_write(desc, buf)) {
+			cerr << "Error: write text to file " << args[1] << " failed!" << endl;
+			break;
 		}
-		basic_close(desc.fd);
+	}
+
+	if (!basic_close(desc.fd)) {
+		cerr << "Error: could not close " << args[1] << endl;
 	}
 }
 
-void FSMain::FS_export(vector<string> args) {
-	ops_exactly(2);
-
-	Descriptor desc;
-	ofstream export_stream(args[2], ofstream::binary);
-	if (!export_stream.is_open()) {
-		cerr << args[0] << ": error: Unable to open " << args[2] << endl;
-		return;
-	}
-
-	if (basic_open(&desc, vector<string>{args[0], args[1], "r"})) {
-		unique_ptr<string> data = basic_read(desc, desc.inode.lock()->size);
-		export_stream << *data;
-		basic_close(desc.fd);
+void FSMain::dumpFreeDataBlocks(vector<string> args) {
+	if(FSInode::free_list) {
+		cout << "Free data blocks: " << FSInode::free_list->size() << endl;
+		for(auto& node: *FSInode::free_list)
+			cout << node.toString() << endl;
 	}
 }
-*/

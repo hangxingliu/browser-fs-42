@@ -8,3 +8,10 @@ body {
     font-size: 20px;
     line-height: 24px;
 }
+
+body.zoom {
+	.terminal, .cmd, .terminal .terminal-output div div, .cmd .prompt {
+		font-size: 60px;
+		line-height: 72px;
+	}
+}

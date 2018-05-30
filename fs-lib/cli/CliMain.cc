@@ -35,10 +35,10 @@ void repl() {
 			continue;
 		}
 
-		if (args[0] == "device-dump") {
+		if (args[0] == "debug") {
 			uint offset = 0;
 			try {
-				offset = (uint) stoi(args[1]);
+				offset = (uint) stoi(args.size() > 1 ? args[1] : "0");
 			} catch (...) {
 				cerr << "device-dump: offset \"" << args[1] << "\" is invalid!" << endl;
 				continue;
@@ -53,6 +53,9 @@ void repl() {
 			for(uint i = 0 ; i < len ; i ++ )
 				cout << ((int) buffer[i]) << " ";
 			cout << endl;
+
+			fs->dumpFreeDataBlocks(args);
+
 			cout << PROMPT;
 			continue;
 		}
@@ -70,25 +73,30 @@ void repl() {
 			fs->read(args);
 		} else if (args[0] == "write") {
 			if(args.size() >= 3) {
-			auto start = cmd.find("\"");
-			auto end = cmd.find("\"", start+1);
-			if (start != string::npos && end != string::npos) {
-				string w_str = cmd.substr(start+1, end-start-1);
-				auto rn = cmd.find_first_not_of(" \t",end+1);
-				if (rn != string::npos) {
-					args = {args[0], args[1], w_str, cmd.substr(rn)};
-				} else {
-					args = {args[0], args[1], w_str};
+				auto start = cmd.find("\"");
+				auto end = cmd.find("\"", start+1);
+				cout << start << "  " << end << endl;
+				if (start != string::npos && end != string::npos) {
+					string w_str = cmd.substr(start+1, end-start-1);
+					auto rn = cmd.find_first_not_of(" \t",end+1);
+					if (rn != string::npos) {
+						args = {args[0], args[1], w_str, cmd.substr(rn)};
+					} else {
+						args = {args[0], args[1], w_str};
+					}
 				}
+			} else {
+				args = {"write"};
 			}
-		} else {
-			args = {"write"};
-		}
 			fs->write(args);
 		} else if (args[0] == "seek") {
 			fs->seek(args);
 		} else if (args[0] == "close") {
 			fs->close(args);
+		} else if (args[0] == "touch") {
+			fs->touch(args);
+		} else if (args[0] == "create-text") {
+			fs->createText(args);
 		} else if (args[0] == "mkdir") {
 			fs->mkdir(args);
 		} else if (args[0] == "rmdir") {
@@ -110,9 +118,9 @@ void repl() {
 		} else if (args[0] == "tree") {
 			fs->tree(args);
 		} else if (args[0] == "import") {
-			fs->import(args);
+			// fs->import(args);
 		} else if (args[0] == "export") {
-			fs->FS_export(args);
+			// fs->FS_export(args);
 		} else if (args[0] == "exit") {
 			break;
 		} else if (args[0] == "pwd") {
